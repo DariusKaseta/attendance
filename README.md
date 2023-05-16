@@ -1,0 +1,2 @@
+# dienynas
+Duombazių komandinis darbas
