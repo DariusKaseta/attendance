@@ -161,21 +161,17 @@ def get_lesson_gui():
     layout = [
         [sg.Combo(values=data, key="combo", size=(80, 0), readonly=True)],
         [sg.Button("Choose", key="Chosen")],
-        [sg.Button("Back", key="Exit")],
     ]
     window = sg.Window("Choose lecture", layout)
     while True:
         event, values = window.read()
-        if event == "Chosen":
+        if event == "Chosen" or event == sg.WINDOW_CLOSED:
             try:
                 window.close()
                 return list(values["combo"])[0]
             except:
                 window.close()
                 return 0
-        if event in (None, "Exit"):
-            break
-        window.close()
 
 
 def lessons_window(lesson):
@@ -206,16 +202,25 @@ def lessons_window(lesson):
         "Teachers name",
         "Teachers surname",
     ]
-    table = sg.Table(data, headings)
-    layout = [[table], [sg.Button("Back", key="Exit", pad=((200, 0), 3))]]
+    table = sg.Table(
+        data,
+        headings,
+        selected_row_colors="red on yellow",
+        enable_click_events=True,
+        key="-TABLE-",
+    )
+    layout = [
+        [table],
+        [sg.Button("Back", key="Exit", pad=((200, 0), 3))],
+        [sg.Button("add", key="add", pad=((200, 0), 3))],
+    ]
     window = sg.Window("Students attendance in a lecture", layout)
     while True:
         event, values = window.read()
-        print(event, values)
-        if event == "-ADD-T-":
-            inputs = [values["-T-name-"], values["-T-lname-"], values["-T-sub-"]]
-            add_teacher_gui(inputs[0], inputs[1], inputs[2])
-            break
+        # if "+CLICKED+" in event:
+        #     sg.popup("You clicked row:{} Column: {}".format(event[2][0], event[2][1]))
+        if event == "add":
+            print(values["-TABLE-"])
         if event in (None, "Exit"):
             break
     window.close()
