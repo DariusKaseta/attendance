@@ -66,11 +66,11 @@ def add_status():
 def get_choice(a_class):
     try:
         choices = session.query(a_class).all()
-        for choice in choices:
-            print(choice)
+        return choices
     except SQLAlchemyError as e:
         session.rollback()
         print("Failed to retrieve Data:", str(e))
+        return None
 
 
 def get_lessons():
@@ -88,20 +88,58 @@ def get_lessons():
         print("Failed to retrieve lesson:", str(e))
 
 
-def create_lesson():
+def create_lesson(teacher_id, date_, topic):
     try:
-        get_choice(Teacher)
-        choosen_teacher = input("Choose a teacher: ")
-        today_date = datetime.strptime(
-            input("Insert lesson's day (YYYY-MM-DD): "), "%Y-%m-%d"
-        )
-        topic = input("Insert lessons topic: ")
-        t_date = Lesson(date_=today_date, teacher_id=choosen_teacher, topic=topic)
+        today_date = datetime.strptime(date_,"%Y-%m-%d")
+        t_date = Lesson(date_=today_date, teacher_id=teacher_id, topic=topic)
+        # t_date = Lesson(date_=today_date, teacher_id=choosen_teacher, topic=topic)
         session.add(t_date)
         session.commit()
+        sg.popup("Lesson created successfully!")
     except SQLAlchemyError as e:
         session.rollback()
         print("Failed to create lesson:", str(e))
+
+
+def create_lesson_gui():
+    teachers = get_choice(Teacher)
+    print(teachers)
+    if teachers is not None:
+        teacher_names = [f"{teacher.id}. {teacher.f_name} {teacher.l_name}" for teacher in teachers]
+        teacher_choice = sg.Combo(teacher_names, key="-TEACHER-", size=(50, 1))
+
+        layout = [
+            [sg.Text("Choose a teacher:")],
+            [teacher_choice],
+            [sg.Button("Create Lesson", key="-CREATE-L-", size=(50, 3))],
+        ]
+
+        window = sg.Window("Create Lesson", layout)
+
+        while True:
+                    event, values = window.read()
+                    
+                    if event == sg.WINDOW_CLOSED:
+                        break
+                    elif event == "-CREATE-L-":
+                        selected_teacher = values["-TEACHER-"]
+                        if selected_teacher:
+                            topic = sg.popup_get_text("Enter lesson's topic:")
+                            if topic:
+                                try:
+                                    teacher_id = int(selected_teacher.split('.')[0])
+                                    current_date = datetime.now().strftime("%Y-%m-%d")
+                                    create_lesson(teacher_id, current_date, topic)
+                                    sg.popup("Topic created successfully!")
+                                except SQLAlchemyError as e:
+                                    sg.popup("Invalid teacher's choice.", str(e))
+                            else:
+                                sg.popup("Topic cannot be empty.")
+                        else:
+                            sg.popup("No teacher selected.")
+        window.close()
+    else:
+        sg.popup("No teachers available")
 
 
 def check_attendance():
@@ -135,7 +173,7 @@ def teacher_window():
         [sg.Text("Subject", size=(15, 1)), sg.Input(key="-T-sub-")],
         [sg.Button("Add teacher", key="-ADD-T-"), sg.Button("Back", key="Exit")],
     ]
-    window = sg.Window("Students attendance in a lecture", layout)
+    window = sg.Window("Please add teacher", layout)
     while True:
         event, values = window.read()
         print(event, values)
