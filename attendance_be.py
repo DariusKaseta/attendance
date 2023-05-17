@@ -27,6 +27,7 @@ def add_teacher():
         session.rollback()
         print("Failed to add teacher:", (e))
 
+
 def add_student_gui(student_fname, student_lname):
     try:
         student = Student(student_fname=student_fname, student_lname=student_lname)
@@ -35,7 +36,7 @@ def add_student_gui(student_fname, student_lname):
         sg.popup(f"Student {student_fname} {student_lname} was created")
     except SQLAlchemyError as e:
         session.rollback()
-        print("Failed to add student:", (e))  
+        print("Failed to add student:", (e))
 
 
 def add_student():
@@ -244,8 +245,8 @@ def lessons_window(lesson):
         data,
         headings,
         selected_row_colors="red on yellow",
-        enable_click_events=True,
         key="-TABLE-",
+        enable_events=True,
     )
     layout = [
         [table],
@@ -255,13 +256,16 @@ def lessons_window(lesson):
     window = sg.Window("Students attendance in a lecture", layout)
     while True:
         event, values = window.read()
-        # if "+CLICKED+" in event:
-        #     sg.popup("You clicked row:{} Column: {}".format(event[2][0], event[2][1]))
+        if "-TABLE-" in event:
+            indexas = values[event][0]
+            sg.popup(data[indexas][5])
+
         if event == "add":
-            print(values["-TABLE-"])
+            print(values["add"])
         if event in (None, "Exit"):
             break
     window.close()
+
 
 def student_window():
     layout = [
@@ -279,3 +283,20 @@ def student_window():
         if event in (None, "Exit"):
             break
     window.close()
+
+
+# all_students = session.query(StudentAttendance).all()
+# data = [
+#     [
+#         item.id,
+#         item.student.student_fname,
+#         item.student.student_lname,
+#         item.lesson.date_,
+#         item.lesson.topic,
+#         item.status.name,
+#         item.lesson.teacher.f_name,
+#         item.lesson.teacher.l_name,
+#     ]
+#     for item in all_students
+# ]
+# print(data)
