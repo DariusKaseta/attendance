@@ -100,6 +100,5 @@ class DatabaseTestCase(unittest.TestCase):
         self.assertEqual(repr(attendance), expected_repr)
 
 
-
 if __name__ == '__main__':
     unittest.main()
