@@ -1,5 +1,17 @@
 from sqlalchemy.exc import SQLAlchemyError
 from attendance import *
+import PySimpleGUI as sg
+
+
+def add_teacher_gui(f_name, l_name, subject):
+    try:
+        teacher = Teacher(f_name=f_name, l_name=l_name, subject=subject)
+        session.add(teacher)
+        session.commit()
+        sg.popup(f"Teacher {f_name} {l_name} was created")
+    except SQLAlchemyError as e:
+        session.rollback()
+        print("Failed to add teacher:", (e))
 
 
 def add_teacher():
@@ -73,7 +85,8 @@ def create_lesson():
         today_date = datetime.strptime(
             input("Insert lesson's day (YYYY-MM-DD): "), "%Y-%m-%d"
         )
-        t_date = Lesson(date_=today_date, teacher_id=choosen_teacher)
+        topic = input("Insert lessons topic: ")
+        t_date = Lesson(date_=today_date, teacher_id=choosen_teacher, topic=topic)
         session.add(t_date)
         session.commit()
     except SQLAlchemyError as e:
@@ -105,4 +118,61 @@ def check_attendance():
         print("Failed to check attendances:", str(e))
 
 
-check_attendance()
+def teacher_window():
+    layout = [
+        [sg.Text("Name", size=(15, 1)), sg.Input(key="-T-name-")],
+        [sg.Text("Last name", size=(15, 1)), sg.Input(key="-T-lname-")],
+        [sg.Text("Subject", size=(15, 1)), sg.Input(key="-T-sub-")],
+        [sg.Button("Add teacher", key="-ADD-T-"), sg.Button("Back", key="Exit")],
+    ]
+    window = sg.Window("Students attendance in a lecture", layout)
+    while True:
+        event, values = window.read()
+        print(event, values)
+        if event == "-ADD-T-":
+            inputs = [values["-T-name-"], values["-T-lname-"], values["-T-sub-"]]
+            add_teacher_gui(inputs[0], inputs[1], inputs[2])
+            break
+        if event in (None, "Exit"):
+            break
+    window.close()
+
+
+def lessons_window():
+    all_workers = session.query(StudentAttendance).all()
+    data = [
+        [
+            item.id,
+            item.student.student_fname,
+            item.student.student_lname,
+            item.lesson.date_,
+            item.lesson.topic,
+            item.status.name,
+            item.lesson.teacher.f_name,
+            item.lesson.teacher.l_name,
+        ]
+        for item in all_workers
+    ]
+    headings = [
+        "Id",
+        "S name",
+        "S last name",
+        "Lessons date",
+        "lessons topic",
+        "Lankomumas",
+        "Teachers name",
+        "Teachers surname",
+    ]
+    table = sg.Table(data, headings)
+    layout = [[table], [sg.Button("Back", key="Exit", pad=((200, 0), 3))]]
+    window = sg.Window("Students attendance in a lecture", layout)
+    while True:
+        event, values = window.read()
+        print(event, values)
+        if event == "-ADD-T-":
+            inputs = [values["-T-name-"], values["-T-lname-"], values["-T-sub-"]]
+            add_teacher_gui(inputs[0], inputs[1], inputs[2])
+            break
+        if event in (None, "Exit"):
+            break
+    window.close()
