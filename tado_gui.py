@@ -17,5 +17,7 @@ while True:
         be.lessons_window(be.get_lesson_gui())
     if event == "-MARK-L-":
         pass
+    if event == "-ADD-S-":
+        be.student_window()
     if event in (None, "-EXIT-"):
         break

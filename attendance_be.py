@@ -27,6 +27,16 @@ def add_teacher():
         session.rollback()
         print("Failed to add teacher:", (e))
 
+def add_student_gui(student_fname, student_lname):
+    try:
+        student = Student(student_fname=student_fname, student_lname=student_lname)
+        session.add(student)
+        session.commit()
+        sg.popup(f"Student {student_fname} {student_lname} was created")
+    except SQLAlchemyError as e:
+        session.rollback()
+        print("Failed to add student:", (e))  
+
 
 def add_student():
     try:
@@ -211,6 +221,23 @@ def lessons_window(lesson):
         #     sg.popup("You clicked row:{} Column: {}".format(event[2][0], event[2][1]))
         if event == "add":
             print(values["-TABLE-"])
+        if event in (None, "Exit"):
+            break
+    window.close()
+
+def student_window():
+    layout = [
+        [sg.Text("Name", size=(15, 1)), sg.Input(key="-S-name-")],
+        [sg.Text("Last name", size=(15, 1)), sg.Input(key="-S-lname-")],
+        [sg.Button("Add student", key="-ADD-S-"), sg.Button("Back", key="Exit")],
+    ]
+    window = sg.Window("Adding new student", layout)
+    while True:
+        event, values = window.read()
+        print(event, values)
+        if event == "-ADD-S-":
+            add_student_gui(values["-S-name-"], values["-S-lname-"])
+            break
         if event in (None, "Exit"):
             break
     window.close()
