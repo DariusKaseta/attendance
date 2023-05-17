@@ -28,16 +28,10 @@ def add_status():
     print(f"{status_name} was created")
 
 
-def get_teachers():
-    teahcers = session.query(Teacher).all()
-    for teacher in teahcers:
-        print(teacher.id, teacher.f_name, teacher.l_name, teacher.subject)
-
-
-def get_students():
-    students = session.query(Student).all()
-    for student in students:
-        print(student.id, student.student_fname, student.student_lname)
+def get_choices(a_class):
+    options = session.query(a_class).all()
+    for a in options:
+        print(a)
 
 
 def get_lessons():
@@ -46,14 +40,8 @@ def get_lessons():
         print(lesson.id, lesson.teacher.f_name, lesson.teacher.l_name, lesson.date_)
 
 
-def get_status():
-    stasuses = session.query(AttStatus).all()
-    for status in stasuses:
-        print(status.id, status.name)
-
-
 def create_lesson():
-    get_teachers()
+    get_choices(Teacher)
     choosen_teacher = input("Choose teacher: ")
     today_date = datetime.strptime(
         input("Insert day of lesson (YYYY-MM-DD): "), "%Y-%m-%d"
@@ -66,13 +54,13 @@ def create_lesson():
 def check_attendance():
     get_lessons()
     chosen_lesson = input("Choose lesson: ")
-    get_students()
+    get_choices(Student)
     while True:
         chosen_student = input("Choose student or insert 0 to finish: ")
         if chosen_student == "0":
             break
         else:
-            get_status()
+            get_choices(AttStatus)
             chosen_status = input("Isert attendance status: ")
             student_atendance = StudentAttendance(
                 lesson_id=chosen_lesson,
@@ -82,6 +70,3 @@ def check_attendance():
             session.add_all([student_atendance])
             session.commit()
             continue
-
-
-check_attendance()
