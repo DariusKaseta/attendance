@@ -16,7 +16,6 @@ def add_teacher():
         print("Failed to add teacher:", (e))
 
 
-
 def add_student():
     try:
         student_fname = input("Insert students name: ")
@@ -28,7 +27,6 @@ def add_student():
     except SQLAlchemyError as e:
         session.rollback()
         print("Failed to add student:", str(e))
-
 
 
 def add_status():
@@ -43,51 +41,34 @@ def add_status():
         print("Failed to add status:", str(e))
 
 
-def get_teachers():
+def get_choice(a_class):
     try:
-        teahcers = session.query(Teacher).all()
-        for teacher in teahcers:
-            print(teacher.id, teacher.f_name, teacher.l_name, teacher.subject)
+        choices = session.query(a_class).all()
+        for choice in choices:
+            print(choice)
     except SQLAlchemyError as e:
         session.rollback()
-        print("Failed to retrieve teacher:", str(e))
-
-
-def get_students():
-    try:
-        students = session.query(Student).all()
-        for student in students:
-            print(student.id, student.student_fname, student.student_lname)
-    except SQLAlchemyError as e:
-        session.rollback()
-        print("Failed to retrieve student:", str(e))
+        print("Failed to retrieve Data:", str(e))
 
 
 def get_lessons():
     try:
         lessons = session.query(Lesson).all()
         for lesson in lessons:
-            teacher_name = f"{lesson.teacher.f_name} {lesson.teacher.l_name}" if lesson.teacher is not None else "N/A"
+            teacher_name = (
+                f"{lesson.teacher.f_name} {lesson.teacher.l_name}"
+                if lesson.teacher is not None
+                else "N/A"
+            )
             print(lesson.id, teacher_name, lesson.date_)
     except SQLAlchemyError as e:
         session.rollback()
         print("Failed to retrieve lesson:", str(e))
 
 
-
-def get_status():
-    try:
-        stasuses = session.query(AttStatus).all()
-        for status in stasuses:
-            print(status.id, status.name)
-    except SQLAlchemyError as e:
-        session.rollback()
-        print("Failed to retrieve status:", str(e))
-
-
 def create_lesson():
     try:
-        get_teachers()
+        get_choice(Teacher)
         choosen_teacher = input("Choose a teacher: ")
         today_date = datetime.strptime(
             input("Insert lesson's day (YYYY-MM-DD): "), "%Y-%m-%d"
@@ -104,13 +85,13 @@ def check_attendance():
     try:
         get_lessons()
         chosen_lesson = input("Choose a lesson:")
-        get_students()
+        get_choice(Student)
         while True:
             chosen_student = input("Choose student or insert 0 to finish: ")
             if chosen_student == "0":
                 break
             else:
-                get_status()
+                get_choice(AttStatus)
                 chosen_status = input("Insert attendance status: ")
                 student_atendance = StudentAttendance(
                     lesson_id=chosen_lesson,
