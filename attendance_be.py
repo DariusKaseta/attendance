@@ -70,3 +70,4 @@ def check_attendance():
             session.add_all([student_atendance])
             session.commit()
             continue
+        
