@@ -14,7 +14,7 @@ while True:
     if event == "-ADD-T-":
         be.teacher_window()
     if event == "-MARK-L-":
-        be.lessons_window()
+        be.lessons_window(be.get_lesson_gui())
     if event == "-MARK-L-":
         pass
     if event in (None, "-EXIT-"):

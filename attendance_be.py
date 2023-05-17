@@ -72,7 +72,7 @@ def get_lessons():
                 if lesson.teacher is not None
                 else "N/A"
             )
-            print(lesson.id, teacher_name, lesson.date_)
+            print(lesson.id, teacher_name, lesson.date_, lesson.topic)
     except SQLAlchemyError as e:
         session.rollback()
         print("Failed to retrieve lesson:", str(e))
@@ -130,16 +130,49 @@ def teacher_window():
         event, values = window.read()
         print(event, values)
         if event == "-ADD-T-":
-            inputs = [values["-T-name-"], values["-T-lname-"], values["-T-sub-"]]
-            add_teacher_gui(inputs[0], inputs[1], inputs[2])
+            add_teacher_gui(values["-T-name-"], values["-T-lname-"], values["-T-sub-"])
             break
         if event in (None, "Exit"):
             break
     window.close()
 
 
-def lessons_window():
-    all_workers = session.query(StudentAttendance).all()
+def get_lesson_gui():
+    lessons = session.query(Lesson).all()
+    data = [
+        [
+            lesson.id,
+            lesson.teacher.f_name + " " + lesson.teacher.l_name,
+            lesson.date_,
+            str(lesson.topic),
+        ]
+        for lesson in lessons
+    ]
+    layout = [
+        [sg.Combo(values=data, key="combo", size=(80, 0), readonly=True)],
+        [sg.Button("Choose", key="Chosen")],
+        [sg.Button("Back", key="Exit")],
+    ]
+    window = sg.Window("Choose lecture", layout)
+    while True:
+        event, values = window.read()
+        if event == "Chosen":
+            try:
+                window.close()
+                return list(values["combo"])[0]
+            except:
+                window.close()
+                return 0
+        if event in (None, "Exit"):
+            break
+        window.close()
+
+
+def lessons_window(lesson):
+    if lesson != 0:
+        all_students = session.query(StudentAttendance).filter_by(lesson_id=lesson)
+    else:
+        all_students = session.query(StudentAttendance).all()
     data = [
         [
             item.id,
@@ -151,7 +184,7 @@ def lessons_window():
             item.lesson.teacher.f_name,
             item.lesson.teacher.l_name,
         ]
-        for item in all_workers
+        for item in all_students
     ]
     headings = [
         "Id",
