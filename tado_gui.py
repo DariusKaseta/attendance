@@ -11,6 +11,9 @@ layout = [
 window = sg.Window("Attendance", layout)
 while True:
     event, values = window.read()
+    if event == "-CREATE-L-":
+        be.create_lesson_gui()
+
     if event == "-ADD-T-":
         be.teacher_window()
     if event == "-MARK-L-":
