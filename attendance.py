@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, relationship, sessionmaker, DeclarativeBase,
 from datetime import datetime
 import sqlite3
 
-engine = create_engine('sqllite:///attendance.db')
+engine = create_engine('sqlite:///attendance.db')
 session = sessionmaker(bind=engine)()
 
 class Base(DeclarativeBase):
@@ -36,7 +36,7 @@ class Lesson(Base):
     # .strftime('%B %d %Y - %H:%M:%S')
     date_ = mapped_column("Dirba nuo", Date, default=datetime.utcnow)
     teacher_id = mapped_column(Integer, ForeignKey("teacher.id"))
-    teacher = relationship("Teacher", back_populates="lessons")
+    teacher = relationship("Teacher", back_populates="lesson")
     attendance = relationship("StudentAttendance", back_populates="lesson")
 
     def __repr__(self):
@@ -59,7 +59,7 @@ class StudentAttendance(Base):
     student_id = mapped_column(Integer, ForeignKey('student.id'))
     attstatus_id = mapped_column(Integer, ForeignKey('attstatus.id'))
     status = relationship("AttStatus", back_populates="student_attendance")
-    student = relationship("Student", back_populates="lessons_attend")
+    student = relationship("Student", back_populates="lesson_attend")
     lesson = relationship("Lesson", back_populates="attendance")
 
     def __repr__(self):
