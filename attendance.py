@@ -44,15 +44,13 @@ class Lesson(Base):
     __tablename__ = "lesson"
     id = mapped_column(Integer, primary_key=True)
     topic = mapped_column(String(50))
-    date_ = mapped_column("Dirba nuo", Date, default=datetime.utcnow)
+    date_ = mapped_column("Lesson's Date", Date, default=datetime.utcnow)
     teacher_id = mapped_column(Integer, ForeignKey("teacher.id"))
     teacher = relationship("Teacher", back_populates="lessons")
     attendance = relationship("StudentAttendance", back_populates="lesson")
 
     def __repr__(self):
-        return (
-            f"{self.id}. {self.date_}, {self.topic}, {self.teacher_id}, {self.teacher}"
-        )
+        return (f"{self.id}. {self.date_}, {self.topic}, {self.teacher_id}")
 
 
 class Student(Base):

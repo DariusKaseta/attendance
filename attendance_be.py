@@ -96,7 +96,7 @@ def create_lesson(teacher_id, date_, topic):
         # t_date = Lesson(date_=today_date, teacher_id=choosen_teacher, topic=topic)
         session.add(t_date)
         session.commit()
-        sg.popup("Lesson created successfully!")
+        # sg.popup("Lesson created successfully!")
     except SQLAlchemyError as e:
         session.rollback()
         print("Failed to create lesson:", str(e))
@@ -108,14 +108,17 @@ def create_lesson_gui():
     if teachers is not None:
         teacher_names = [f"{teacher.id}. {teacher.f_name} {teacher.l_name}" for teacher in teachers]
         teacher_choice = sg.Combo(teacher_names, key="-TEACHER-", size=(50, 1))
+        date_input = sg.Input(key="-DATE-", size=(50,1))
 
         layout = [
-            [sg.Text("Choose a teacher:")],
+            [sg.Text("Teacher's Login:")],
             [teacher_choice],
-            [sg.Button("Create Lesson", key="-CREATE-L-", size=(50, 3))],
+            [sg.Text("Date:")],
+            [date_input],
+            [sg.Button("Add Topic", key="-CREATE-L-", size=(50, 3))],
         ]
 
-        window = sg.Window("Create Lesson", layout)
+        window = sg.Window("Login & Add topic", layout)
 
         while True:
                     event, values = window.read()
@@ -124,13 +127,13 @@ def create_lesson_gui():
                         break
                     elif event == "-CREATE-L-":
                         selected_teacher = values["-TEACHER-"]
+                        date = values["-DATE-"]
                         if selected_teacher:
                             topic = sg.popup_get_text("Enter lesson's topic:")
                             if topic:
                                 try:
                                     teacher_id = int(selected_teacher.split('.')[0])
-                                    current_date = datetime.now().strftime("%Y-%m-%d")
-                                    create_lesson(teacher_id, current_date, topic)
+                                    create_lesson(teacher_id, date, topic)
                                     sg.popup("Topic created successfully!")
                                 except SQLAlchemyError as e:
                                     sg.popup("Invalid teacher's choice.", str(e))
