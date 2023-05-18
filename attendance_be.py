@@ -44,7 +44,7 @@ def teacher_window():
         [sg.Text("Subject", size=(15, 1)), sg.Input(key="-T-sub-")],
         [sg.Button("Add teacher", key="-ADD-T-"), sg.Button("Back", key="Exit")],
     ]
-    window = sg.Window("Students attendance in a lecture", layout)
+    window = sg.Window("Please add teacher", layout)
     while True:
         event, values = window.read()
         print(event, values)
