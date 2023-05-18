@@ -90,7 +90,7 @@ def create_lesson_gui():
             [teacher_choice],
             [sg.Text("Date:")],
             [date_input],
-            [sg.Button("Add Topic", key="-CREATE-L-", size=(50, 3))],
+            [sg.Button("Next", key="-CREATE-L-", size=(15, 1))],
         ]
 
         window = sg.Window("Login & Add topic", layout)
@@ -207,63 +207,47 @@ def lessons_window(lesson):
         all_students = session.query(StudentAttendance).filter_by(lesson_id=lesson)
     else:
         all_students = session.query(StudentAttendance).all()
-    status_data = [
-        [
-            item.status.id,
-        ]
-        for item in all_students
-    ]
+
     data = [
         [
             item.id,
-            item.student.student_fname,
-            item.student.student_lname,
+            item.student.student_fname + " " + item.student.student_lname,
             item.lesson.date_,
             item.lesson.topic,
             item.status.name,
-            item.lesson.teacher.f_name,
-            item.lesson.teacher.l_name,
+            item.lesson.teacher.f_name + " " + item.lesson.teacher.l_name,
         ]
         for item in all_students
     ]
     headings = [
         "Id",
-        "S name",
-        "S last name",
+        "Student",
         "Lessons date",
-        "lessons topic",
-        "Lankomumas",
+        "Lessons topic",
+        "Attendance",
         "Teachers name",
-        "Teachers surname",
     ]
     table = sg.Table(
         data,
         headings,
-        selected_row_colors="red on yellow",
+        selected_row_colors="Blue on white",
         key="-TABLE-",
         enable_events=True,
+        justification="left",
+        header_background_color=("Light blue"),
     )
     layout = [
         [table],
-        [sg.Button("Back", key="Exit", pad=((200, 0), 3))],
-        [
-            sg.Button(
-                "Edit marked student",
-                key="-EDIT-",
-                pad=((200, 0), 3),
-            )
-        ],
-        [
-            sg.Button(
-                "Refresh",
-                key="ref",
-                pad=((200, 0), 3),
-            )
-        ],
         [
             sg.Radio("Present", group_id=1, key="-Present-", default=True),
             sg.Radio("Absent", group_id=1, key="-Absent-"),
             sg.Radio("Late", group_id=1, key="-Late-"),
+            sg.Button(
+                "Edit marked student",
+                key="-EDIT-",
+                pad=((50, 0), 3),
+            ),
+            sg.Button("Back", key="Exit", pad=((50, 0), 3)),
         ],
     ]
     window = sg.Window("Students attendance in a lecture", layout)
@@ -287,19 +271,15 @@ def lessons_window(lesson):
             new_data = [
                 [
                     item.id,
-                    item.student.student_fname,
-                    item.student.student_lname,
+                    item.student.student_fname + " " + item.student.student_lname,
                     item.lesson.date_,
                     item.lesson.topic,
                     item.status.name,
-                    item.lesson.teacher.f_name,
-                    item.lesson.teacher.l_name,
+                    item.lesson.teacher.f_name + " " + item.lesson.teacher.l_name,
                 ]
                 for item in all_students
             ]
             window["-TABLE-"].update(new_data)
-        if event == "ref":
-            window["-TABLE-"].update(data)
         if event in (None, "Exit"):
             break
     window.close()
