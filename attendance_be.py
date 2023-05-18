@@ -14,20 +14,6 @@ def add_teacher_gui(f_name, l_name, subject):
         print("Failed to add teacher:", (e))
 
 
-def add_teacher():
-    try:
-        f_name = input("Insert teachers name: ")
-        l_name = input("Insert teachers last name: ")
-        subject = input("Insert teacher's subject: ")
-        teacher = Teacher(f_name=f_name, l_name=l_name, subject=subject)
-        session.add(teacher)
-        session.commit()
-        print(f"Teacher {f_name} {l_name} was created")
-    except SQLAlchemyError as e:
-        session.rollback()
-        print("Failed to add teacher:", (e))
-
-
 def add_student_gui(student_fname, student_lname):
     try:
         student = Student(student_fname=student_fname, student_lname=student_lname)
@@ -37,19 +23,6 @@ def add_student_gui(student_fname, student_lname):
     except SQLAlchemyError as e:
         session.rollback()
         print("Failed to add student:", (e))
-
-
-def add_student():
-    try:
-        student_fname = input("Insert students name: ")
-        student_lname = input("Insert students last name: ")
-        student = Student(student_fname=student_fname, student_lname=student_lname)
-        session.add(student)
-        session.commit()
-        print(f"Student {student_fname} {student_lname} was created")
-    except SQLAlchemyError as e:
-        session.rollback()
-        print("Failed to add student:", str(e))
 
 
 def add_status():
@@ -91,7 +64,7 @@ def get_lessons():
 
 def create_lesson(teacher_id, date_, topic):
     try:
-        today_date = datetime.strptime(date_,"%Y-%m-%d")
+        today_date = datetime.strptime(date_, "%Y-%m-%d")
         t_date = Lesson(date_=today_date, teacher_id=teacher_id, topic=topic)
         # t_date = Lesson(date_=today_date, teacher_id=choosen_teacher, topic=topic)
         session.add(t_date)
@@ -106,9 +79,11 @@ def create_lesson_gui():
     teachers = get_choice(Teacher)
     print(teachers)
     if teachers is not None:
-        teacher_names = [f"{teacher.id}. {teacher.f_name} {teacher.l_name}" for teacher in teachers]
+        teacher_names = [
+            f"{teacher.id}. {teacher.f_name} {teacher.l_name}" for teacher in teachers
+        ]
         teacher_choice = sg.Combo(teacher_names, key="-TEACHER-", size=(50, 1))
-        date_input = sg.Input(key="-DATE-", size=(50,1))
+        date_input = sg.Input(key="-DATE-", size=(50, 1))
 
         layout = [
             [sg.Text("Teacher's Login:")],
@@ -121,26 +96,37 @@ def create_lesson_gui():
         window = sg.Window("Login & Add topic", layout)
 
         while True:
-                    event, values = window.read()
-                    
-                    if event == sg.WINDOW_CLOSED:
-                        break
-                    elif event == "-CREATE-L-":
-                        selected_teacher = values["-TEACHER-"]
-                        date = values["-DATE-"]
-                        if selected_teacher:
-                            topic = sg.popup_get_text("Enter lesson's topic:")
-                            if topic:
-                                try:
-                                    teacher_id = int(selected_teacher.split('.')[0])
-                                    create_lesson(teacher_id, date, topic)
-                                    sg.popup("Topic created successfully!")
-                                except SQLAlchemyError as e:
-                                    sg.popup("Invalid teacher's choice.", str(e))
-                            else:
-                                sg.popup("Topic cannot be empty.")
-                        else:
-                            sg.popup("No teacher selected.")
+            event, values = window.read()
+
+            if event == sg.WINDOW_CLOSED:
+                break
+            elif event == "-CREATE-L-":
+                selected_teacher = values["-TEACHER-"]
+                date = values["-DATE-"]
+                if selected_teacher:
+                    topic = sg.popup_get_text("Enter lesson's topic:")
+                    if topic:
+                        try:
+                            teacher_id = int(selected_teacher.split(".")[0])
+                            create_lesson(teacher_id, date, topic)
+                            lessons = session.query(Lesson).filter_by(topic=topic)
+                            for lesson in lessons:
+                                chosen_lesson = lesson.id
+                            for a in session.query(Student).all():
+                                student_atendance = StudentAttendance(
+                                    lesson_id=chosen_lesson,
+                                    student_id=a.id,
+                                    attstatus_id=1,
+                                )
+                                session.add(student_atendance)
+                            session.commit()
+                            sg.popup("Topic created successfully!")
+                        except SQLAlchemyError as e:
+                            sg.popup("Invalid teacher's choice.", str(e))
+                    else:
+                        sg.popup("Topic cannot be empty.")
+                else:
+                    sg.popup("No teacher selected.")
         window.close()
     else:
         sg.popup("No teachers available")
@@ -161,7 +147,7 @@ def check_attendance():
                 student_atendance = StudentAttendance(
                     lesson_id=chosen_lesson,
                     student_id=chosen_student,
-                    attstatus_id=chosen_status,
+                    attstatus_id=1,
                 )
                 session.add(student_atendance)
                 session.commit()
@@ -221,6 +207,12 @@ def lessons_window(lesson):
         all_students = session.query(StudentAttendance).filter_by(lesson_id=lesson)
     else:
         all_students = session.query(StudentAttendance).all()
+    status_data = [
+        [
+            item.status.id,
+        ]
+        for item in all_students
+    ]
     data = [
         [
             item.id,
@@ -254,17 +246,60 @@ def lessons_window(lesson):
     layout = [
         [table],
         [sg.Button("Back", key="Exit", pad=((200, 0), 3))],
-        [sg.Button("add", key="add", pad=((200, 0), 3))],
+        [
+            sg.Button(
+                "Edit marked student",
+                key="-EDIT-",
+                pad=((200, 0), 3),
+            )
+        ],
+        [
+            sg.Button(
+                "Refresh",
+                key="ref",
+                pad=((200, 0), 3),
+            )
+        ],
+        [
+            sg.Radio("Present", group_id=1, key="-Present-", default=True),
+            sg.Radio("Absent", group_id=1, key="-Absent-"),
+            sg.Radio("Late", group_id=1, key="-Late-"),
+        ],
     ]
     window = sg.Window("Students attendance in a lecture", layout)
     while True:
         event, values = window.read()
-        if "-TABLE-" in event:
-            indexas = values[event][0]
-            sg.popup(data[indexas][5])
-
-        if event == "add":
-            print(values["add"])
+        if event == "-EDIT-":
+            indexas = values["-TABLE-"][0]
+            status_to_edit = (
+                session.query(StudentAttendance).filter_by(id=data[indexas][0]).one()
+            )
+            if values["-Present-"]:
+                print(1)
+                status_to_edit.attstatus_id = 1
+            if values["-Absent-"]:
+                print(2)
+                status_to_edit.attstatus_id = 2
+            if values["-Late-"]:
+                status_to_edit.attstatus_id = 3
+                print(3)
+            session.commit()
+            new_data = [
+                [
+                    item.id,
+                    item.student.student_fname,
+                    item.student.student_lname,
+                    item.lesson.date_,
+                    item.lesson.topic,
+                    item.status.name,
+                    item.lesson.teacher.f_name,
+                    item.lesson.teacher.l_name,
+                ]
+                for item in all_students
+            ]
+            window["-TABLE-"].update(new_data)
+        if event == "ref":
+            window["-TABLE-"].update(data)
         if event in (None, "Exit"):
             break
     window.close()
@@ -286,20 +321,3 @@ def student_window():
         if event in (None, "Exit"):
             break
     window.close()
-
-
-# all_students = session.query(StudentAttendance).all()
-# data = [
-#     [
-#         item.id,
-#         item.student.student_fname,
-#         item.student.student_lname,
-#         item.lesson.date_,
-#         item.lesson.topic,
-#         item.status.name,
-#         item.lesson.teacher.f_name,
-#         item.lesson.teacher.l_name,
-#     ]
-#     for item in all_students
-# ]
-# print(data)
